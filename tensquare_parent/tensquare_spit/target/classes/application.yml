@@ -1,0 +1,15 @@
+server:
+  port: 9006
+spring:
+  application:
+    name: tensquare_spit
+  data:
+    mongodb:
+      host: 39.105.162.160
+      database: spitdb
+  redis:
+    host: 39.105.162.160
+
+logging:
+  level:
+    org.springframework.cloud.openfeign: info

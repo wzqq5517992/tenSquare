@@ -9,7 +9,11 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
+import javax.servlet.http.HttpServletRequest;
 
+
+import com.tensquare.user.pojo.Admin;
+import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -19,12 +23,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import util.IdWorker;
 
 import com.tensquare.user.dao.UserDao;
 import com.tensquare.user.pojo.User;
+import util.JwtUtil;
 
 /**
  * 服务层
@@ -45,7 +51,23 @@ public class UserService {
 	private RedisTemplate redisTemplate;
 	@Autowired
 	private RabbitTemplate rabbitTemplate;
+	@Autowired
+	private BCryptPasswordEncoder bCryptPasswordEncoder;
 
+	@Autowired
+	private HttpServletRequest request;
+	@Autowired
+	private JwtUtil jwtUtil;
+
+	public User login(String mobile,String password ) {
+		User loginUser = userDao.findByMobile(mobile);
+		if (loginUser!=null && bCryptPasswordEncoder.matches(password,loginUser.getPassword())){
+
+			return  loginUser;
+		}
+		return null;
+
+	}
 	public void sendSms(String mobile) {
 		//生成六位数字随机数
 		String checkcode = RandomStringUtils.randomNumeric(6);
@@ -110,7 +132,7 @@ public class UserService {
 	 */
 	public void add(User user) {
 		user.setId( idWorker.nextId()+"" );
-
+		user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 		user.setFollowcount(0);//关注数
 		user.setFanscount(0);//粉丝数
 		user.setOnline(0L);//在线时长
@@ -133,6 +155,10 @@ public class UserService {
 	 * @param id
 	 */
 	public void deleteById(String id) {
+		String claims_admin = (String) request.getAttribute("claims_admin");
+		if (claims_admin==null || "".equals(claims_admin)){
+			throw new RuntimeException("权限不足！");
+		}
 		userDao.deleteById(id);
 	}
 
@@ -187,5 +213,6 @@ public class UserService {
 		};
 
 	}
+
 
 }

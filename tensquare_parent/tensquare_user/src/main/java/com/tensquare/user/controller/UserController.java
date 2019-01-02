@@ -1,4 +1,5 @@
 package com.tensquare.user.controller;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,8 @@ import com.tensquare.user.service.UserService;
 import entity.PageResult;
 import entity.Result;
 import entity.StatusCode;
+import util.JwtUtil;
+
 /**
  * 控制器层
  * @author Administrator
@@ -32,8 +35,27 @@ public class UserController {
 	private UserService userService;
 	@Autowired
 	private RedisTemplate redisTemplate;
+	@Autowired
+	private JwtUtil jwtUtil;
 
 
+	/**
+	 * 用户登录
+	 * @param user
+	 * @return
+	 */
+	@RequestMapping(value = "/login", method = RequestMethod.POST)
+	public  Result login(@RequestBody User user){
+		User userLogin=userService.login(user.getMobile(),user.getPassword());
+		if (userLogin==null){
+			return new Result(false,StatusCode.ERROR,"登录失败！");
+		}
+		String token = jwtUtil.createJWT(userLogin.getId(), userLogin.getLoginname(), "user");
+		Map<String,Object> map=new HashMap<>();
+		map.put("token",token);
+		map.put("roles","user");
+		return new Result(true,StatusCode.OK,"登录成功！",map);
+	}
 	/**
 	 * 用户注册
 	 * @param user

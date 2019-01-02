@@ -1,5 +1,6 @@
 package com.tensquare.user.dao;
 
+import com.tensquare.user.pojo.Admin;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -10,5 +11,7 @@ import com.tensquare.user.pojo.User;
  *
  */
 public interface UserDao extends JpaRepository<User,String>,JpaSpecificationExecutor<User>{
-	
+
+
+    public User findByMobile(String mobile);
 }

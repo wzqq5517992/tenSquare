@@ -17,6 +17,9 @@ import com.tensquare.qa.service.ProblemService;
 import entity.PageResult;
 import entity.Result;
 import entity.StatusCode;
+
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * 控制器层
  * @author Administrator
@@ -29,6 +32,8 @@ public class ProblemController {
 
 	@Autowired
 	private ProblemService problemService;
+	@Autowired
+	private HttpServletRequest request;
 
 	/**
 	 * 查询最新问题列表
@@ -123,6 +128,10 @@ public class ProblemController {
 	 */
 	@RequestMapping(method=RequestMethod.POST)
 	public Result add(@RequestBody Problem problem  ){
+		String token = (String) request.getAttribute("claims_user");
+		if(token==null || "".equals(token)){
+			return new Result(false, StatusCode.ACCESSERROR, "权限不足");
+		}
 		problemService.add(problem);
 		return new Result(true,StatusCode.OK,"增加成功");
 	}
